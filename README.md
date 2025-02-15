@@ -1,4 +1,11 @@
-# Eliza
+# SonicCoffee
+
+Progress 
+
+- [] Setup Eliza
+- [] Trading Algo Eliza -> Can be a separate service with our algo using Kaito information
+- [] Another Eliza Framework for communication with users
+
 
 ## Edit the character files
 
