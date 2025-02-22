@@ -67,7 +67,7 @@
         {
           "name": "uniswap",
           "args": {
-            "api_key": "YOUR_API_KEY",
+            "api_key": "kHEhfIPvCE3PO5PeT0rNb1CA3JJcnQ8r7kJDXN5X",
             "rpc_url": "https://polygon-mainnet.g.alchemy.com/v2/7ef-K-JTGnIcWxZxuSn9DKzvrO6XpYzS",
             "base_url": "https://trade-api.gateway.uniswap.org/v1"
           }
@@ -75,7 +75,7 @@
         {
           "name": "erc20",
           "args": {
-            "tokens": ["goat_plugins.erc20.token.PEPE", "goat_plugins.erc20.token.USDC"]
+            "tokens": ["goat_plugins.erc20.token.DAI", "goat_plugins.erc20.token.USDC"]
           }
         }
       ]

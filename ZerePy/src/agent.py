@@ -180,8 +180,13 @@ class ZerePyAgent:
                     self.state["timeline_swaps"] = self.connection_manager.perform_action(
                         connection_name="goat",
                         action_name="uniswap_swap_tokens",
-                        params=["0x455D0C56ECBC3E25F2e239D31B77E6C9c32c8e7","0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", 137, "1000000", "EXACT_INPUT", ["V3"], "FASTEST"]
+                        params=["0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", 137, "1000000", "EXACT_INPUT", ["V2","V3"], "FASTEST"]
                     )
+                    # self.state["timeline_swaps"] = self.connection_manager.perform_action(
+                    #     connection_name="goat",
+                    #     action_name="get_qote",
+                    #     params=["0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", 137, "1000000", "EXACT_INPUT", ["V3"], "CLASSIC"]
+                    # )
 
 
                     
