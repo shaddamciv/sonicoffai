@@ -11,6 +11,7 @@ from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.history import FileHistory
+from src.get_signal import get_signal
 from src.agent import ZerePyAgent
 from src.helpers import print_h_bar
 
@@ -531,9 +532,10 @@ class ZerePyCLI:
                 user_input = self.session.prompt("\nYou: ").strip()
                 if user_input.lower() == 'exit':
                     break
-                
-                response = self.agent.prompt_llm(user_input)
-                logger.info(f"\n{self.agent.name}: {response}")
+                response = get_signal(user_input, self.agent)
+                print(response)
+                # response = self.agent.prompt_llm(user_input)
+                # logger.info(f"\n{self.agent.name}: {response}")
                 print_h_bar()
                 
             except KeyboardInterrupt:
