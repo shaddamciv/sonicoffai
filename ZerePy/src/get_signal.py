@@ -6,7 +6,7 @@ from datetime import datetime
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
-from .database import create_connection, insert_result
+from .database import create_connection, insert_result, create_table
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -51,6 +51,7 @@ def get_signal(message, agent):
     }
 
     conn = create_connection("results.db")
+    create_table(conn);
 
     for r in response_list:
         parts = r.split(";")

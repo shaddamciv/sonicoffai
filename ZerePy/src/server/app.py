@@ -9,6 +9,8 @@ import threading
 from pathlib import Path
 from src.cli import ZerePyCLI
 from src.get_signal import get_signal
+from src.database import create_connection, get_latest_direction
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -39,10 +41,10 @@ class ServerState:
             while not self._stop_event.is_set():
                 if self.cli.agent:
                     try:
-                        if not log_once:
-                            logger.info("Loop logic not implemented")
-                            log_once = True
-
+                        conn = create_connection("results.db")
+                        latest_direction = get_latest_direction(conn, currency="ETH")
+                        logger.info(f"Latest direction for ETH: {latest_direction}")
+                        time.sleep(5)  # Sleep for 5 seconds
                     except Exception as e:
                         logger.error(f"Error in agent action: {e}")
                         if self._stop_event.wait(timeout=30):

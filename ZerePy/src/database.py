@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 def create_connection(db_file):
     conn = None
@@ -15,7 +16,8 @@ def create_table(conn):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         currency TEXT NOT NULL,
         direction TEXT NOT NULL,
-        rsi REAL NOT NULL
+        rsi REAL NOT NULL,
+        date TEXT NOT NULL
     );
     """
     try:
@@ -25,13 +27,21 @@ def create_table(conn):
         print(e)
 
 def insert_result(conn, result):
-    sql = ''' INSERT INTO results(currency, direction, rsi)
-              VALUES(?,?,?) '''
+    sql = ''' INSERT INTO results(currency, direction, rsi, date)
+              VALUES(?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, result)
     conn.commit()
     return cur.lastrowid
 
+def get_latest_direction(conn, currency):
+    cur = conn.cursor()
+    cur.execute("SELECT direction FROM results WHERE currency = ? ORDER BY date DESC LIMIT 1", (currency,))
+    row = cur.fetchone()
+    if row:
+        return row[0]
+    return None
+    
 def main():
     database = "results.db"
 

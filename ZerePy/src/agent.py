@@ -10,6 +10,7 @@ from src.helpers import print_h_bar
 from src.action_handler import execute_action
 import src.actions.solana_actions
 from datetime import datetime
+from src.database import get_latest_direction
 
 REQUIRED_FIELDS = ["name", "bio", "traits", "examples", "loop_delay", "config", "tasks"]
 
@@ -139,11 +140,15 @@ class ZerePyAgent:
                 success = False
                 try:
                     logger.info("\n👀 Trying swapping")
-                    self.state["timeline_swaps"] = self.connection_manager.perform_action(
-                        connection_name="sonic",
-                        action_name="get-balance",
-                        params=["0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"]
-                    )
+                    
+                    # self.state["timeline_swaps"] = self.connection_manager.perform_action(
+                    #     connection_name="sonic",
+                    #     action_name="get-balance",
+                    #     params=["0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"]
+                    # )
+                    # here first get the latest for ETH from DB
+                    # If short -> Then sell WETH and buy USDC
+                    # else sell -> Then sell USDC and buy WETH
                     # self.state["timeline_swaps"] = self.connection_manager.perform_action(
                     #     connection_name="goat",
                     #     action_name="get_qote",
@@ -151,7 +156,9 @@ class ZerePyAgent:
                     # )
 
 
-                    
+                    # Get the latest direction for ETH from the database
+                    latest_direction = get_latest_direction(currency="ETH")
+                    logger.info(f"Latest direction for ETH: {latest_direction}")
                     action = self.select_action(use_time_based_weights=self.use_time_based_weights)
                     action_name = action["name"]
 
