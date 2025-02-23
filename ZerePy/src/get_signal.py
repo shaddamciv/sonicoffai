@@ -80,7 +80,7 @@ def get_signal(message, agent):
                     df = __calculate_rsi(df)
                     price =  df['close'].iloc[-1]
                     rsi = round(df['rsi'].iloc[-1],1)
-                    if coin in check_coins:
+                    if coin != "ETH" or coin in check_coins:
                         continue
                     if sentiment=="POSITIVE":
                         result_text = f"{coin};LONG;rsi {rsi}"
