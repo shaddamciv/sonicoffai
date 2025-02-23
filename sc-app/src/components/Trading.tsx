@@ -111,7 +111,8 @@ export const Trading = () => {
             const price = signalJson.message.price[0];
             setDecision({
               symbol: result.split(';')[0],
-              type: result === 'POSITIVE' ? 'BUY' : 'SELL',
+              type: result.split(';')[1] === 'LONG' ? 'BUY' : 'SELL',
+              rsi: +result.split(';')[2].replace('rsi ', ''),
               price: +price.split(';')[1],
               timestamp: signalJson.message.timestamp
             });
@@ -157,7 +158,7 @@ export const Trading = () => {
   return (
     <div className='flex flex-col items-center gap-4 w-full'>
       {activeStep === 0 &&
-        <form className='flex flex-col items-center gap-4 w-full max-w-xl' onSubmit={handleSubmit(onSubmitKey)}>
+        <form className='flex flex-col items-center gap-4 w-full max-w-2xl' onSubmit={handleSubmit(onSubmitKey)}>
           <h2>Setup Your Key</h2>
           <div className='flex flex-col items-start gap-1 w-full'>
             <span className='text-primary text-sm required'>Provider:</span>
@@ -202,12 +203,12 @@ export const Trading = () => {
       }
 
       {activeStep === 1 &&
-        <div className='flex flex-col items-center gap-4 w-full max-w-xl'>
+        <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Fund Your Wallet</h2>
           <QRCodeSVG value={`${myAddress}`} size={150} bgColor={'#ffffff'} />
           <label className='input input-primary input-bordered input-sm rounded-sm text-black flex items-center gap-2' style={{ maxWidth: 380, width: '100%' }}>
             <input type='text' className='grow' value={myAddress} disabled />
-            <div className='tooltip' data-tip={copyText}>
+            <div className='tooltip tooltip-success' data-tip={copyText}>
               <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='size-4 cursor-pointer' onClick={copy}>
                 <path strokeLinecap='round' strokeLinejoin='round' d='M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z' />
               </svg>
@@ -218,7 +219,7 @@ export const Trading = () => {
       }
 
       {activeStep === 2 &&
-        <div className='flex flex-col items-center gap-4 w-full max-w-xl'>
+        <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Lastest news</h2>
           <div className='flex flex-col items-start gap-1 w-full'>
             <img src={article?.urlToImage} alt={article?.title} className='rounded-lg w-full' />
@@ -230,14 +231,23 @@ export const Trading = () => {
       }
 
       {activeStep === 3 &&
-        <div className='flex flex-col items-center gap-4 w-full max-w-xl'>
+        <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Summary</h2>
           <table className='table border text-xs w-full shadow-sm rounded-none'>
             <thead>
               <tr>
                 <th>Time</th>
                 <th>Symbol</th>
+                <th>Price</th>
                 <th>Decision</th>
+                <th>
+                  RSI
+                  <div className='tooltip tooltip-success' data-tip='RSI: The 1D chart’s Relative Strength Index (RSI) is calculated over a 14-day period. It is a technical analysis tool that measures the speed and magnitude of a security’s recent price changes to detect overbought or oversold conditions. Typically, an RSI of 70 or higher indicates an overbought condition, while an RSI of 30 or lower indicates an oversold condition.'>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4 text-error ml-1">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                  </div>
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -245,7 +255,9 @@ export const Trading = () => {
               <tr className='hover'>
                 <td>{moment(decision?.timestamp).format('DD-MM-yyyy hh:mm:ss')}</td>
                 <td>{decision?.symbol}</td>
-                <td>{decision?.type}</td>
+                <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : 'text-success'}`}>{decision?.type}</td>
+                <td>{decision?.price}</td>
+                <td>{decision?.rsi}</td>
                 <td>
                   <button className='btn btn-success btn-sm rounded-sm text-white mr-3' onClick={start}>Start</button>
                   <button className='btn btn-error btn-sm rounded-sm text-white' onClick={stop}>Stop</button>

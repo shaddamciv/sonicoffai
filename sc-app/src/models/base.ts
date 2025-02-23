@@ -17,4 +17,5 @@ export interface Decision {
   type: 'SELL' | 'BUY';
   price: number;
   timestamp: string;
+  rsi: number;
 }
