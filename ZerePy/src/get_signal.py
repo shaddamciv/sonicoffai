@@ -6,6 +6,7 @@ from datetime import datetime
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
+from .database import create_connection, insert_result, create_table
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -40,7 +41,7 @@ def get_signal(message, agent):
     agent_response =agent_response.replace("$", "")
     agent_response = agent_response.upper()
     response_list = agent_response.split("\n")
-
+    print("Agent Response - ", agent_response)
     result = {
         "message": message,
         "timestamp": datetime.now(),
@@ -48,6 +49,9 @@ def get_signal(message, agent):
         "price": [],
         "result": []
     }
+
+    conn = create_connection("results.db")
+    create_table(conn);
 
     for r in response_list:
         parts = r.split(";")
@@ -79,11 +83,14 @@ def get_signal(message, agent):
                     if sentiment=="POSITIVE":
                         result_text = f"{coin};LONG;rsi {rsi}"
                         result['result'].append(result_text)
+                        insert_result(conn, (coin, "LONG", rsi, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     if sentiment=="NEGATIVE":
                         result_text = f"{coin};SHORT;rsi {rsi}"
                         result['result'].append(result_text)
+                        insert_result(conn, (coin, "SHORT", rsi, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     result['price'].append(f"{coin};{price}")
     logger.info(f"\n{agent.name}: {response}")
+    # we need to set like ETH - SHORT into DB, this will be picked up by loop and swap will be done
     return result
 
 def __calculate_rsi(df, period=14):

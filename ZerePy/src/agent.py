@@ -8,10 +8,9 @@ from dotenv import load_dotenv
 from src.connection_manager import ConnectionManager
 from src.helpers import print_h_bar
 from src.action_handler import execute_action
-import src.actions.twitter_actions  
-import src.actions.echochamber_actions
 import src.actions.solana_actions
 from datetime import datetime
+from src.database import get_latest_direction
 
 REQUIRED_FIELDS = ["name", "bio", "traits", "examples", "loop_delay", "config", "tasks"]
 
@@ -40,20 +39,6 @@ class ZerePyAgent:
             self.use_time_based_weights = agent_dict["use_time_based_weights"]
             self.time_based_multipliers = agent_dict["time_based_multipliers"]
 
-            has_twitter_tasks = any("tweet" in task["name"] for task in agent_dict.get("tasks", []))
-            
-            twitter_config = next((config for config in agent_dict["config"] if config["name"] == "twitter"), None)
-            
-            if has_twitter_tasks and twitter_config:
-                self.tweet_interval = twitter_config.get("tweet_interval", 900)
-                self.own_tweet_replies_count = twitter_config.get("own_tweet_replies_count", 2)
-
-            # Extract Echochambers config
-            echochambers_config = next((config for config in agent_dict["config"] if config["name"] == "echochambers"), None)
-            if echochambers_config:
-                self.echochambers_message_interval = echochambers_config.get("message_interval", 60)
-                self.echochambers_history_count = echochambers_config.get("history_read_count", 50)
-
             self.is_llm_set = False
 
             # Cache for system prompt
@@ -66,7 +51,7 @@ class ZerePyAgent:
 
             # Set up empty agent state
             self.state = {}
-
+            self._setup_llm_provider()
         except Exception as e:
             logger.error("Could not load ZerePy agent")
             raise e
@@ -78,13 +63,6 @@ class ZerePyAgent:
             raise ValueError("No configured LLM provider found")
         self.model_provider = llm_providers[0]
 
-        # Load Twitter username for self-reply detection if Twitter tasks exist
-        if any("tweet" in task["name"] for task in self.tasks):
-            load_dotenv()
-            self.username = os.getenv('TWITTER_USERNAME', '').lower()
-            if not self.username:
-                logger.warning("Twitter username not found, some Twitter functionalities may be limited")
-
     def _construct_system_prompt(self) -> str:
         """Construct the system prompt from agent configuration"""
         if self._system_prompt is None:
@@ -94,21 +72,6 @@ class ZerePyAgent:
             if self.traits:
                 prompt_parts.append("\nYour key traits are:")
                 prompt_parts.extend(f"- {trait}" for trait in self.traits)
-
-            if self.examples or self.example_accounts:
-                prompt_parts.append("\nHere are some examples of your style (Please avoid repeating any of these):")
-                if self.examples:
-                    prompt_parts.extend(f"- {example}" for example in self.examples)
-
-                if self.example_accounts:
-                    for example_account in self.example_accounts:
-                        tweets = self.connection_manager.perform_action(
-                            connection_name="twitter",
-                            action_name="get-latest-tweets",
-                            params=[example_account]
-                        )
-                        if tweets:
-                            prompt_parts.extend(f"- {tweet['text']}" for tweet in tweets)
 
             self._system_prompt = "\n".join(prompt_parts)
 
@@ -177,11 +140,15 @@ class ZerePyAgent:
                 success = False
                 try:
                     logger.info("\n👀 Trying swapping")
-                    self.state["timeline_swaps"] = self.connection_manager.perform_action(
-                        connection_name="goat",
-                        action_name="uniswap_swap_tokens",
-                        params=["0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", 137, "1000000", "EXACT_INPUT", ["V2","V3"], "FASTEST"]
-                    )
+                    
+                    # self.state["timeline_swaps"] = self.connection_manager.perform_action(
+                    #     connection_name="sonic",
+                    #     action_name="get-balance",
+                    #     params=["0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"]
+                    # )
+                    # here first get the latest for ETH from DB
+                    # If short -> Then sell WETH and buy USDC
+                    # else sell -> Then sell USDC and buy WETH
                     # self.state["timeline_swaps"] = self.connection_manager.perform_action(
                     #     connection_name="goat",
                     #     action_name="get_qote",
@@ -189,7 +156,9 @@ class ZerePyAgent:
                     # )
 
 
-                    
+                    # Get the latest direction for ETH from the database
+                    latest_direction = get_latest_direction(currency="ETH")
+                    logger.info(f"Latest direction for ETH: {latest_direction}")
                     action = self.select_action(use_time_based_weights=self.use_time_based_weights)
                     action_name = action["name"]
 

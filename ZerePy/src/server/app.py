@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -8,6 +8,9 @@ import signal
 import threading
 from pathlib import Path
 from src.cli import ZerePyCLI
+from src.get_signal import get_signal
+from src.database import create_connection, get_latest_direction
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -38,10 +41,10 @@ class ServerState:
             while not self._stop_event.is_set():
                 if self.cli.agent:
                     try:
-                        if not log_once:
-                            logger.info("Loop logic not implemented")
-                            log_once = True
-
+                        conn = create_connection("results.db")
+                        latest_direction = get_latest_direction(conn, currency="ETH")
+                        logger.info(f"Latest direction for ETH: {latest_direction}")
+                        time.sleep(5)  # Sleep for 5 seconds
                     except Exception as e:
                         logger.error(f"Error in agent action: {e}")
                         if self._stop_event.wait(timeout=30):
@@ -167,6 +170,21 @@ class ZerePyServer:
             try:
                 await self.state.stop_agent_loop()
                 return {"status": "success", "message": "Agent loop stopped"}
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+        
+        @self.app.post("/agent/signal")
+        async def get_agent_signal(request: Request):
+            """Get the signal from agent"""
+            if not self.state.cli.agent:
+                raise HTTPException(status_code=400, detail="No agent loaded")
+            
+            try:
+                request_data = await request.json()
+                message = request_data.get("news", "")
+                response = await asyncio.to_thread(self.state.cli._get_signal, message)
+                # response = self.state.cli._get_signal(message)
+                return {"status": "success", "message": response, "original_message": message}  
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
         

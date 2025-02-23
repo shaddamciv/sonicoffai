@@ -44,7 +44,12 @@ class ZerePyClient:
     def start_agent(self) -> Dict[str, Any]:
         """Start the agent loop"""
         return self._make_request("POST", "/agent/start")
-
+    
     def stop_agent(self) -> Dict[str, Any]:
         """Stop the agent loop"""
         return self._make_request("POST", "/agent/stop")
+
+    def get_signal(self, message: str) -> Dict[str, Any]:
+        """Get signal for a message"""
+        data = {"message": message}
+        return self._make_request("POST", "/agent/signal", json=data)
