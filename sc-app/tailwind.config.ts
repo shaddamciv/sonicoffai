@@ -23,7 +23,7 @@ export default {
       {
         light: {
           primary: "#FE9A4D"
-        },
+        }
       }
     ]
   }
