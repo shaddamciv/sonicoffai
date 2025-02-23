@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -8,6 +8,7 @@ import signal
 import threading
 from pathlib import Path
 from src.cli import ZerePyCLI
+from src.get_signal import get_signal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -167,6 +168,21 @@ class ZerePyServer:
             try:
                 await self.state.stop_agent_loop()
                 return {"status": "success", "message": "Agent loop stopped"}
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+        
+        @self.app.post("/agent/signal")
+        async def get_agent_signal(request: Request):
+            """Get the signal from agent"""
+            if not self.state.cli.agent:
+                raise HTTPException(status_code=400, detail="No agent loaded")
+            
+            try:
+                request_data = await request.json()
+                message = request_data.get("news", "")
+                response = await asyncio.to_thread(self.state.cli._get_signal, message)
+                # response = self.state.cli._get_signal(message)
+                return {"status": "success", "message": response, "original_message": message}  
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
         

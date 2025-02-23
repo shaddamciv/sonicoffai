@@ -349,6 +349,14 @@ class ZerePyCLI:
             logger.error(f"Invalid agent file: {e}")
         except Exception as e:
             logger.error(f"Error loading agent: {e}")
+    
+    def _get_signal(self, message: str) -> Dict[str, any]:
+        try:
+            response = get_signal(message, self.agent)
+            return response
+        except Exception as e:
+            logger.error(f"Error getting signal: {e}")
+            return {}
 
     def _load_default_agent(self) -> None:
         """Load users default agent"""
