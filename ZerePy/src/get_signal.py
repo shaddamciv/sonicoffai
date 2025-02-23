@@ -37,8 +37,7 @@ def get_signal(message, agent):
     else:
         message_input = message
     response = agent.prompt_llm(message_input)
-    agent_response =response.replace(" ", "")
-    agent_response =agent_response.replace("$", "")
+    agent_response =response.replace("$", "")
     agent_response = agent_response.upper()
     response_list = agent_response.split("\n")
     print("Agent Response - ", agent_response)
@@ -54,7 +53,7 @@ def get_signal(message, agent):
     create_table(conn)
     check_coins =[]
     for r in response_list:
-        parts = r.split(";")
+        parts = r.split(";") if ";" in r else r.split(" ")
         if len(parts) == 2:
             symbol, sentiment = parts
         else:
@@ -90,6 +89,10 @@ def get_signal(message, agent):
                         result_text = f"{coin};SHORT;rsi {rsi}"
                         result['result'].append(result_text)
                         insert_result(conn, (coin, "SHORT", rsi, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                    if sentiment=="NEUTRAL":
+                        result_text = f"{coin};NEUTRAL;rsi {rsi}"
+                        result['result'].append(result_text)
+                        insert_result(conn, (coin, "NEUTRAL", rsi, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     result['price'].append(f"{coin};{price}")
                     check_coins.append(coin)
     logger.info(f"\n{agent.name}: {response}")
