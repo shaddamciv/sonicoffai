@@ -11,6 +11,9 @@ from src.cli import ZerePyCLI
 from src.get_signal import get_signal
 from src.database import create_connection, get_latest_direction
 import time
+import os
+from dotenv import load_dotenv, set_key
+from web3 import Web3
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -185,6 +188,28 @@ class ZerePyServer:
                 response = await asyncio.to_thread(self.state.cli._get_signal, message)
                 # response = self.state.cli._get_signal(message)
                 return {"status": "success", "message": response, "original_message": message}  
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+        
+        @self.app.post("/agent/setenv")
+        async def set_env(request: Request):    
+            try:
+                load_dotenv()
+
+                request_data = await request.json()
+                for key, value in request_data.items():
+                    set_key(".env", key, value)
+                
+                # Generate a new wallet
+                w3 = Web3()
+                account = w3.eth.account.create()
+
+                # Set the private key in the .env file
+                set_key(".env", "WALLET_PRIVATE_KEY_LOCAL", account.key.hex())
+
+                # Prepare the response with the public key
+                message = account.address
+                return {"status": "success", "message": message, "original_message": message}  
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
         

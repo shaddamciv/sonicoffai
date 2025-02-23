@@ -53,3 +53,8 @@ class ZerePyClient:
         """Get signal for a message"""
         data = {"message": message}
         return self._make_request("POST", "/agent/signal", json=data)
+    
+    def set_environment(self, message: str) -> Dict[str, Any]:
+        """Get signal for a message"""
+        data = {"message": message}
+        return self._make_request("POST", "/agent/setenv", json=data)
