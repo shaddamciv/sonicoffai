@@ -51,8 +51,8 @@ def get_signal(message, agent):
     }
 
     conn = create_connection("results.db")
-    create_table(conn);
-
+    create_table(conn)
+    check_coins =[]
     for r in response_list:
         parts = r.split(";")
         if len(parts) == 2:
@@ -80,6 +80,8 @@ def get_signal(message, agent):
                     df = __calculate_rsi(df)
                     price =  df['close'].iloc[-1]
                     rsi = round(df['rsi'].iloc[-1],1)
+                    if coin in check_coins:
+                        continue
                     if sentiment=="POSITIVE":
                         result_text = f"{coin};LONG;rsi {rsi}"
                         result['result'].append(result_text)
@@ -89,6 +91,7 @@ def get_signal(message, agent):
                         result['result'].append(result_text)
                         insert_result(conn, (coin, "SHORT", rsi, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                     result['price'].append(f"{coin};{price}")
+                    check_coins.append(coin)
     logger.info(f"\n{agent.name}: {response}")
     # we need to set like ETH - SHORT into DB, this will be picked up by loop and swap will be done
     return result

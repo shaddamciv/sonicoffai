@@ -43,12 +43,40 @@
   "loop_delay": 900,
   "config": [
     {
+      "name": "twitter",
+      "timeline_read_count": 10,
+      "own_tweet_replies_count":2,
+      "tweet_interval": 5400
+    },
+    {
+      "name": "farcaster",
+      "timeline_read_count": 10,
+      "cast_interval": 60
+    },
+    {
       "name": "openai",
       "model": "gpt-3.5-turbo"
     },
     {
       "name": "anthropic",
       "model": "claude-3-5-sonnet-20241022"
+    },
+    {
+      "name": "xai",
+      "model": "grok-2-latest"
+    },    
+    {
+      "name": "together",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+    },    
+    {
+      "name": "solana",
+      "rpc": "https://api.mainnet-beta.solana.com"
+    },
+    {
+      "name": "eternalai",
+      "model": "NousResearch/Hermes-3-Llama-3.1-70B-FP8",
+      "chain_id": "45762"
     },
     {
       "name": "ollama",
@@ -73,6 +101,19 @@
       ]
     },
     {
+      "name": "groq",
+      "model": "llama-3.3-70b-versatile",
+      "temperature": 0.5
+    },
+    {
+      "name": "hyperbolic",
+      "model": "meta-llama/Meta-Llama-3-70B-Instruct"
+    },
+    {
+      "name": "galadriel",
+      "model": "gpt-3.5-turbo"
+    },
+    {
       "name": "sonic",
       "network": "mainnet"
     },
@@ -83,7 +124,14 @@
     {
       "name": "evm",
       "network": "ethereum"
-     }
+     },
+    
+    {
+      "name": "discord",
+      "message_read_count": 10,
+      "message_emoji_name": "❤️",
+      "server_id": "1234567890"
+    }
   ],
   "tasks": [
 
