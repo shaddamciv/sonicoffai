@@ -5,7 +5,9 @@ import moment from 'moment';
 import { QRCodeSVG } from 'qrcode.react';
 
 import { Article, Decision, KeyInput } from '@/models/base';
-
+import EtherscanLatestTransaction from './Transaction';
+const apiKey = 'NJ5N7WS9PCW76MGY2INNDPDGUKSZ7SRA6A';
+const address = '0x35ce7FAB34A5960FF273a2446952f48d99A0B3FE';
 export const Trading = () => {
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<KeyInput>({
     defaultValues: {
@@ -265,6 +267,7 @@ export const Trading = () => {
               </tr>
             </tbody>
           </table>
+          <EtherscanLatestTransaction apiKey={apiKey} address={address} />
         </div>
       }
     </div>

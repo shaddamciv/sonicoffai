@@ -228,8 +228,8 @@ class ZerePyServer:
                 # Set the private key in the .env file
                 set_key(".env", "WALLET_PRIVATE_KEY", account.key.hex())
                 # Make sure token approvals are set
-                self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
-                self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
+                # self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
+                # self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
                 
                 # Prepare the response with the public key
                 message = account.address
