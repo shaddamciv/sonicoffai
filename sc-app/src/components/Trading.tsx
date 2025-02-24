@@ -271,7 +271,7 @@ export const Trading = () => {
 
       {activeStep === 2 &&
         <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
-          <h2>Lastest news</h2>
+          <h2>Latest news</h2>
           {isLoading ?
             <div className='flex flex-col items-center gap-2'>
               <span className="loading loading-spinner loading-lg"></span>
