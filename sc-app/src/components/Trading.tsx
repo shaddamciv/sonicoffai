@@ -9,7 +9,7 @@ import { Article, Decision, KeyInput } from '@/models/base';
 export const Trading = () => {
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<KeyInput>({
     defaultValues: {
-      provider: '',
+      provider: 'OpenAI',
       openAI: ''
     }
   });
@@ -18,12 +18,35 @@ export const Trading = () => {
   const [copyText, setCopyText] = useState<string>('Copy to clipboard');
   const [article, setArticle] = useState<Article>();
   const [decision, setDecision] = useState<Decision>();
+  const [isLoading, setIsLoading] = useState<boolean>();
+  const [isAnalysing, setIsAnalysing] = useState<boolean>();
+  const [myContent, setMyContent] = useState<string>('');
+
+  useEffect(() => {
+    const at = localStorage.getItem('activeStep');
+    if (at) {
+      setActiveStep(+at);
+      if (+at === 2) {
+        getLatestNews();
+      } else if (+at === 3) {
+        const deci = localStorage.getItem('decision');
+        if (deci) {
+          setDecision(JSON.parse(deci) as Decision);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeStep) {
+      localStorage.setItem('activeStep', activeStep.toString());
+    }
+  }, [activeStep]);
 
   useEffect(() => {
     const address = localStorage.getItem('myAddress');
     if (address) {
       setMyAddress(address);
-      setActiveStep(1);
     }
   }, []);
 
@@ -41,6 +64,7 @@ export const Trading = () => {
   }
 
   const onSubmitKey = async (data: KeyInput) => {
+    setIsLoading(true);
     if (data.provider === 'OpenAI') {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/setenv`, {
         method: 'POST',
@@ -60,10 +84,12 @@ export const Trading = () => {
         }
       }
     }
+    setIsLoading(false);
   }
 
   const getLatestNews = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_NEWSAPI_BASE_URL}/everything?apikey=${process.env.NEXT_PUBLIC_NEWSAPI_API_KEY}&q=ethereum&searchIn=title,description,content&language=en&sortBy=publishedAt&pageSize=1&page=1`);
+    setIsLoading(true);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_NEWSAPI_BASE_URL}/everything?apikey=${process.env.NEXT_PUBLIC_NEWSAPI_API_KEY}&q=ethereum&searchIn=title&language=en&sortBy=publishedAt&pageSize=1&page=1`);
     if (response.ok) {
       const json = await response.json();
       if (json && json.articles && json.articles.length > 0) {
@@ -75,6 +101,7 @@ export const Trading = () => {
         setActiveStep(2);
       }
     }
+    setIsLoading(false);
   }
 
   const contentCleaner = (content: string) => {
@@ -85,6 +112,7 @@ export const Trading = () => {
   }
 
   const analyse = async () => {
+    setIsAnalysing(true);
     const load = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/news_analyzer/load`, {
       method: 'POST',
       headers: {
@@ -101,26 +129,29 @@ export const Trading = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            news: `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
+            news: myContent ? myContent : `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
           })
         });
         if (signal.ok) {
           const signalJson = await signal.json();
-          if (signalJson && signalJson.message && signalJson.message.result.length > 0) {
+          if (signalJson && signalJson.message && signalJson.message.result && signalJson.message.result.length > 0) {
             const result = signalJson.message.result[0];
             const price = signalJson.message.price[0];
-            setDecision({
+            const deci = {
               symbol: result.split(';')[0],
               type: result.split(';')[1] === 'LONG' ? 'BUY' : 'SELL',
               rsi: +result.split(';')[2].replace('rsi ', ''),
               price: +price.split(';')[1],
               timestamp: signalJson.message.timestamp
-            });
+            }
+            setDecision(deci as Decision);
+            localStorage.setItem('decision', JSON.stringify(deci));
             setActiveStep(3);
           }
         }
       }
     }
+    setIsAnalysing(false);
   }
 
   const start = async () => {
@@ -159,8 +190,8 @@ export const Trading = () => {
     <div className='flex flex-col items-center gap-4 w-full'>
       {activeStep === 0 &&
         <form className='flex flex-col items-center gap-4 w-full max-w-2xl' onSubmit={handleSubmit(onSubmitKey)}>
-          <h2>Setup Your Key</h2>
-          <div className='flex flex-col items-start gap-1 w-full'>
+          <h2>Setup Your OpenAI Key</h2>
+          {/* <div className='flex flex-col items-start gap-1 w-full'>
             <span className='text-primary text-sm required'>Provider:</span>
             <Controller
               name='provider'
@@ -177,7 +208,7 @@ export const Trading = () => {
               }
             />
             {errors.openAI && <span className='text-xs text-red-500'>{errors.openAI.message}</span>}
-          </div>
+          </div> */}
           {
             watch('provider') === 'OpenAI' &&
             <div className='flex flex-col items-start gap-1 w-full'>
@@ -198,7 +229,10 @@ export const Trading = () => {
               {errors.provider && <span className='text-xs text-red-500'>{errors.provider.message}</span>}
             </div>
           }
-          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' type='submit'>Confirm</button>
+          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' type='submit' disabled={isLoading}>
+            {isLoading && <span className="loading loading-spinner text-white"></span>}
+            Confirm
+          </button>
         </form>
       }
 
@@ -206,7 +240,7 @@ export const Trading = () => {
         <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Fund Your Wallet</h2>
           <QRCodeSVG value={`${myAddress}`} size={150} bgColor={'#ffffff'} />
-          <label className='input input-primary input-bordered input-sm rounded-sm text-black flex items-center gap-2' style={{ maxWidth: 380, width: '100%' }}>
+          <label className='input input-primary input-bordered input-sm rounded-sm text-black flex items-center gap-2' style={{ maxWidth: 400, width: '100%' }}>
             <input type='text' className='grow' value={myAddress} disabled />
             <div className='tooltip tooltip-success' data-tip={copyText}>
               <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='size-4 cursor-pointer' onClick={copy}>
@@ -214,7 +248,10 @@ export const Trading = () => {
               </svg>
             </div>
           </label>
-          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' onClick={getLatestNews}>Confirm</button>
+          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' onClick={getLatestNews} disabled={isLoading}>
+            {isLoading && <span className="loading loading-spinner text-white"></span>}
+            Confirm
+          </button>
         </div>
       }
 
@@ -226,7 +263,16 @@ export const Trading = () => {
             <a className='text-lg text-primary font-semibold underline' href={article?.url} target='_blank'>{article?.title}</a>
             <p>{article?.content}</p>
           </div>
-          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' onClick={analyse}>Analyse this new</button>
+          <div className='flex flex-col items-start gap-1 w-full'>
+            <span className='text-primary text-sm'>Or enter your content (optional):</span>
+            <textarea className='textarea textarea-bordered rounded-sm text-black w-full' placeholder='Type a message' rows={3} value={myContent} onChange={(e) => {
+              setMyContent(e.target.value);
+            }}></textarea>
+          </div>
+          <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' onClick={analyse} disabled={isAnalysing}>
+            {isAnalysing && <span className="loading loading-spinner text-white"></span>}
+            Analyse
+          </button>
         </div>
       }
 
@@ -255,8 +301,8 @@ export const Trading = () => {
               <tr className='hover'>
                 <td>{moment(decision?.timestamp).format('DD-MM-yyyy hh:mm:ss')}</td>
                 <td>{decision?.symbol}</td>
-                <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : 'text-success'}`}>{decision?.type}</td>
                 <td>{decision?.price}</td>
+                <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : 'text-success'}`}>{decision?.type}</td>
                 <td>{decision?.rsi}</td>
                 <td>
                   <button className='btn btn-success btn-sm rounded-sm text-white mr-3' onClick={start}>Start</button>

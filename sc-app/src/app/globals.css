@@ -2,21 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #131315;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: #ededed;
+  background: #131315;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -45,4 +33,10 @@ h2 {
 .required::after {
   content: " *";
   color: red;
+}
+
+.btn-primary:is(.btn-disabled, [disabled], :disabled) {
+  background-color: #666 !important;
+  cursor: not-allowed !important;
+  pointer-events: initial !important;
 }
