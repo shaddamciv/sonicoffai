@@ -14,12 +14,14 @@ Steps
 
 1. Fork this repo into your laptop 
 2. Install python 3.11 and poetry
-3. cd ZerePy
+3. ```cd ZerePy```
 4. Run Backend - ```poetry run python main.py --server```
 5. Add .env for frontend
-6. Run Frontend - ```npm run dev```
-7. Goto localhost:3000 
-8. Follow setup
+6. Install nodejs latest version
+7. ```cd sc-app```
+8. Install dependencies ```npm install```
+9. Run Frontend - ```npm run dev```
+10. Goto http://localhost:3000/
 Then you can start using the app.
 
 Sample swaps on sonic scan - 
