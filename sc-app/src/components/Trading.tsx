@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, set, useForm } from 'react-hook-form';
 
 import moment from 'moment';
 import { QRCodeSVG } from 'qrcode.react';
@@ -21,6 +21,7 @@ export const Trading = () => {
   const [isLoading, setIsLoading] = useState<boolean>();
   const [isAnalysing, setIsAnalysing] = useState<boolean>();
   const [myContent, setMyContent] = useState<string>('');
+  const [isRunning, setIsRunning] = useState<boolean>();
 
   useEffect(() => {
     const at = localStorage.getItem('activeStep');
@@ -32,6 +33,7 @@ export const Trading = () => {
         const deci = localStorage.getItem('decision');
         if (deci) {
           setDecision(JSON.parse(deci) as Decision);
+          getAgentStatus();
         }
       }
     }
@@ -155,6 +157,7 @@ export const Trading = () => {
   }
 
   const start = async () => {
+    setIsLoading(true);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/start`, {
       method: 'POST',
       headers: {
@@ -163,14 +166,13 @@ export const Trading = () => {
       body: JSON.stringify({})
     });
     if (response.ok) {
-      const json = await response.json();
-      if (json && json.message) {
-        console.log(json.message);
-      }
+      getAgentStatus();
     }
+    setIsLoading(false);
   }
 
   const stop = async () => {
+    setIsLoading(true);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/stop`, {
       method: 'POST',
       headers: {
@@ -179,10 +181,21 @@ export const Trading = () => {
       body: JSON.stringify({})
     });
     if (response.ok) {
-      const json = await response.json();
-      if (json && json.message) {
-        console.log(json.message);
+      getAgentStatus();
+    }
+    setIsLoading(false);
+  }
+
+  const getAgentStatus = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
+    });
+    if (response.ok) {
+      const json = await response.json();
+      setIsRunning(json && json.agent_running);
     }
   }
 
@@ -258,11 +271,17 @@ export const Trading = () => {
       {activeStep === 2 &&
         <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Lastest news</h2>
-          <div className='flex flex-col items-start gap-1 w-full'>
-            <img src={article?.urlToImage} alt={article?.title} className='rounded-lg w-full' />
-            <a className='text-lg text-primary font-semibold underline' href={article?.url} target='_blank'>{article?.title}</a>
-            <p>{article?.content}</p>
-          </div>
+          {isLoading ?
+            <div>
+              <span className="loading loading-spinner loading-lg"></span>
+              <span className='text-success'>Getting latest news</span>
+            </div> :
+            <div className='flex flex-col items-start gap-1 w-full'>
+              <img src={article?.urlToImage} alt={article?.title} className='rounded-lg w-full' />
+              <a className='text-lg text-primary font-semibold underline' href={article?.url} target='_blank'>{article?.title}</a>
+              <p>{article?.content}</p>
+            </div>
+          }
           <div className='flex flex-col items-start gap-1 w-full'>
             <span className='text-primary text-sm'>Or enter your content (optional):</span>
             <textarea className='textarea textarea-bordered rounded-sm text-black w-full' placeholder='Type a message' rows={3} value={myContent} onChange={(e) => {
@@ -294,7 +313,6 @@ export const Trading = () => {
                     </svg>
                   </div>
                 </th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -304,13 +322,36 @@ export const Trading = () => {
                 <td>{decision?.price}</td>
                 <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : 'text-success'}`}>{decision?.type}</td>
                 <td>{decision?.rsi}</td>
-                <td>
-                  <button className='btn btn-success btn-sm rounded-sm text-white mr-3' onClick={start}>Start</button>
-                  <button className='btn btn-error btn-sm rounded-sm text-white' onClick={stop}>Stop</button>
-                </td>
               </tr>
             </tbody>
           </table>
+          {isRunning ?
+            <div className='flex flex-col items-center gap-2'>
+              <span className="loading loading-dots loading-sm"></span>
+              <span className='text-success'>Your are trading</span>
+              <button className='btn btn-error btn-sm rounded-sm text-white min-w-60 uppercase' onClick={stop} disabled={isLoading}>
+                {isLoading && <span className="loading loading-spinner text-white"></span>}
+                Stop trading
+              </button>
+            </div> :
+            <>
+              {(decision?.type === 'BUY' || decision?.type === 'SELL') &&
+                <button className={`btn ${decision?.type === 'BUY' ? 'btn-success' : 'btn-error'} btn-sm rounded-sm text-white min-w-60 uppercase`} onClick={start} disabled={isLoading}>
+                  {isLoading && <span className="loading loading-spinner text-white"></span>}
+                  {decision?.type} {decision?.symbol}
+                </button>
+              }
+            </>
+          }
+          {!isRunning && !isAnalysing &&
+            <button className='btn btn-primary btn-sm rounded-sm text-white min-w-60 uppercase' onClick={() => {
+              setActiveStep(2);
+              localStorage.removeItem('decision');
+              getLatestNews();
+            }}>
+              Go back
+            </button>
+          }
         </div>
       }
     </div>
