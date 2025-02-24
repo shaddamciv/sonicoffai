@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Controller, set, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import moment from 'moment';
 import { QRCodeSVG } from 'qrcode.react';
@@ -67,44 +67,52 @@ export const Trading = () => {
   }
 
   const onSubmitKey = async (data: KeyInput) => {
-    setIsLoading(true);
-    if (data.provider === 'OpenAI') {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/setenv`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          OPENAI_API_KEY: data.openAI
-        })
-      });
-      if (response.ok) {
-        const json = await response.json();
-        if (json && json.message) {
-          setMyAddress(json.message);
-          localStorage.setItem('myAddress', json.message);
-          setActiveStep(1);
+    try {
+      setIsLoading(true);
+      if (data.provider === 'OpenAI') {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/setenv`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            OPENAI_API_KEY: data.openAI
+          })
+        });
+        if (response.ok) {
+          const json = await response.json();
+          if (json && json.message) {
+            setMyAddress(json.message);
+            localStorage.setItem('myAddress', json.message);
+            setActiveStep(1);
+          }
         }
       }
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
     }
-    setIsLoading(false);
   }
 
   const getLatestNews = async () => {
-    setIsLoading(true);
-    const response = await fetch(`${process.env.NEXT_PUBLIC_NEWSAPI_BASE_URL}/everything?apikey=${process.env.NEXT_PUBLIC_NEWSAPI_API_KEY}&q=ethereum&searchIn=title&language=en&sortBy=publishedAt&pageSize=1&page=1`);
-    if (response.ok) {
-      const json = await response.json();
-      if (json && json.articles && json.articles.length > 0) {
-        const content = contentCleaner(json.articles[0].content);
-        setArticle({
-          ...json.articles[0],
-          content
-        });
-        setActiveStep(2);
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_NEWSAPI_BASE_URL}/everything?apikey=${process.env.NEXT_PUBLIC_NEWSAPI_API_KEY}&q=ethereum&searchIn=title&language=en&sortBy=publishedAt&pageSize=1&page=1`);
+      if (response.ok) {
+        const json = await response.json();
+        if (json && json.articles && json.articles.length > 0) {
+          const content = contentCleaner(json.articles[0].content);
+          setArticle({
+            ...json.articles[0],
+            content
+          });
+          setActiveStep(2);
+        }
       }
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
     }
-    setIsLoading(false);
   }
 
   const contentCleaner = (content: string) => {
@@ -115,88 +123,104 @@ export const Trading = () => {
   }
 
   const analyse = async () => {
-    setIsAnalysing(true);
-    const load = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/news_analyzer/load`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
-    if (load.ok) {
-      const json = await load.json();
-      if (json && json.status === 'success') {
-        const signal = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/signal`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            news: myContent ? contentCleaner(myContent) : `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
-          })
-        });
-        if (signal.ok) {
-          const signalJson = await signal.json();
-          if (signalJson && signalJson.message && signalJson.message.result && signalJson.message.result.length > 0) {
-            const result = signalJson.message.result[0];
-            const price = signalJson.message.price[0];
-            const deci = {
-              symbol: result.split(';')[0],
-              type: result.split(';')[1] === 'LONG' ? 'BUY' : result.split(';')[1] === 'SHORT' ? 'SELL' : 'NEUTRAL',
-              rsi: +result.split(';')[2].replace('rsi ', ''),
-              price: +price.split(';')[1],
-              timestamp: signalJson.message.timestamp
+    try {
+      setIsAnalysing(true);
+      const load = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/news_analyzer/load`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      if (load.ok) {
+        const json = await load.json();
+        if (json && json.status === 'success') {
+          const signal = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/signal`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              news: myContent ? contentCleaner(myContent) : `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
+            })
+          });
+          if (signal.ok) {
+            const signalJson = await signal.json();
+            if (signalJson && signalJson.message && signalJson.message.result && signalJson.message.result.length > 0) {
+              const result = signalJson.message.result[0];
+              const price = signalJson.message.price[0];
+              const deci = {
+                symbol: result.split(';')[0],
+                type: result.split(';')[1] === 'LONG' ? 'BUY' : result.split(';')[1] === 'SHORT' ? 'SELL' : 'NEUTRAL',
+                rsi: +result.split(';')[2].replace('rsi ', ''),
+                price: +price.split(';')[1],
+                timestamp: signalJson.message.timestamp
+              }
+              setDecision(deci as Decision);
+              localStorage.setItem('decision', JSON.stringify(deci));
+              setActiveStep(3);
             }
-            setDecision(deci as Decision);
-            localStorage.setItem('decision', JSON.stringify(deci));
-            setActiveStep(3);
           }
         }
       }
+      setIsAnalysing(false);
+    } catch (error) {
+      console.error(error);
     }
-    setIsAnalysing(false);
   }
 
   const start = async () => {
-    setIsLoading(true);
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/start`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
-    if (response.ok) {
-      getAgentStatus();
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      if (response.ok) {
+        getAgentStatus();
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
     }
-    setIsLoading(false);
   }
 
   const stop = async () => {
-    setIsLoading(true);
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/stop`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
-    if (response.ok) {
-      getAgentStatus();
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agent/stop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      if (response.ok) {
+        getAgentStatus();
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
     }
-    setIsLoading(false);
   }
 
   const getAgentStatus = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const json = await response.json();
+        setIsRunning(json && json.agent_running);
       }
-    });
-    if (response.ok) {
-      const json = await response.json();
-      setIsRunning(json && json.agent_running);
+    } catch (error) {
+      console.error(error);
     }
   }
 

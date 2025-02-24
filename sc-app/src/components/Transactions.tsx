@@ -21,14 +21,19 @@ export const Transactions = (props: {
     setInterval(() => {
       getTransactionRows();
     }
-    , 3000);
+      , 3000);
   }, []);
 
   const getTransactionRows = async () => {
-    const response = await fetch(`https://api.sonicscan.org/api?module=account&action=txlist&startblock=0&endblock=99999999&sort=desc&apikey=NJ5N7WS9PCW76MGY2INNDPDGUKSZ7SRA6A&address=${props.address}`);
-    if (response.ok) {
-      const data = await response.json();
-      setTransactions(data.result);
+    try {
+      const response = await fetch(`https://api.sonicscan.org/api?module=account&action=txlist&startblock=0&endblock=99999999&sort=desc&apikey=NJ5N7WS9PCW76MGY2INNDPDGUKSZ7SRA6A&address=${props.address}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.result && Array.isArray(data.result))
+          setTransactions(data.result);
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 
