@@ -22,6 +22,9 @@ Steps
 8. Follow setup
 Then you can start using the app.
 
+Sample swaps on sonic scan - 
+https://sonicscan.org/tx/0x1cad17b9fe2a43954d8bb48baf73fa71496072939ece5bc8d8e4c2860b32ea83
+https://sonicscan.org/address/0x35ce7fab34a5960ff273a2446952f48d99a0b3fe
 
 ## Postman examples
 
