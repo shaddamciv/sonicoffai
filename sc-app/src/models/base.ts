@@ -19,3 +19,19 @@ export interface Decision {
   timestamp: string;
   rsi: number;
 }
+
+export interface Transaction {
+  blockNumber: string;
+  timeStamp: string;
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  gas: string;
+  gasPrice: string;
+  isError: string;
+  contractAddress: string;
+  input: string;
+  methodId: string;
+  functionName: string;
+}

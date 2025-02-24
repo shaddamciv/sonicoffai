@@ -5,6 +5,7 @@ import moment from 'moment';
 import { QRCodeSVG } from 'qrcode.react';
 
 import { Article, Decision, KeyInput } from '@/models/base';
+import { Transactions } from './Transactions';
 
 export const Trading = () => {
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<KeyInput>({
@@ -272,7 +273,7 @@ export const Trading = () => {
         <div className='flex flex-col items-center gap-4 w-full max-w-2xl'>
           <h2>Lastest news</h2>
           {isLoading ?
-            <div>
+            <div className='flex flex-col items-center gap-2'>
               <span className="loading loading-spinner loading-lg"></span>
               <span className='text-success'>Getting latest news</span>
             </div> :
@@ -352,6 +353,7 @@ export const Trading = () => {
               Go back
             </button>
           }
+          <Transactions address={myAddress} />
         </div>
       }
     </div>
