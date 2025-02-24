@@ -59,7 +59,7 @@ class ServerState:
                             self.cli.agent.perform_action(
                                 connection="sonic",
                                 action="swap",
-                                params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", 0.00001, 0.5]
+                                params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", 0.01, 0.5]
                             )
                         time.sleep(5)  # Sleep for 5 seconds
                     except Exception as e:
