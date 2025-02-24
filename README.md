@@ -16,7 +16,12 @@ Steps
 2. Install python 3.11 and poetry
 3. cd ZerePy
 4. Run Backend - ```poetry run python main.py --server```
-5. Run Frontend - ``` ```
+5. Add .env for frontend
+6. Run Frontend - ```npm run dev```
+7. Goto localhost:3000 
+8. Follow setup
+Then you can start using the app.
+
 
 ## Postman examples
 
@@ -29,3 +34,5 @@ curl -X POST "http://localhost:8000/agent/setenv" \
      -d '{
            "OPENAI_API_KEY": "sk-"
          }'
+
+        
