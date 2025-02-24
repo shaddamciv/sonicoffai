@@ -21,7 +21,7 @@ export const Transactions = (props: {
     setInterval(() => {
       getTransactionRows();
     }
-    , 10000);
+    , 3000);
   }, []);
 
   const getTransactionRows = async () => {
