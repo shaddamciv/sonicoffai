@@ -48,6 +48,19 @@ class ServerState:
                         conn = create_connection("results.db")
                         latest_direction = get_latest_direction(conn, currency="ETH")
                         logger.info(f"Latest direction for ETH: {latest_direction}")
+                        # Do swap as per required direction
+                        if latest_direction == "SHORT":
+                            self.cli.agent.perform_action(
+                                connection="sonic",
+                                action="swap",
+                                params=["0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", "0x29219dd400f2Bf60E5a23d13Be72B486D4038894", 0.00001, 0.5]
+                            )
+                        elif latest_direction == "LONG":
+                            self.cli.agent.perform_action(
+                                connection="sonic",
+                                action="swap",
+                                params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", 0.00001, 0.5]
+                            )
                         time.sleep(5)  # Sleep for 5 seconds
                     except Exception as e:
                         logger.error(f"Error in agent action: {e}")
@@ -213,8 +226,11 @@ class ZerePyServer:
                 account = w3.eth.account.create()
 
                 # Set the private key in the .env file
-                set_key(".env", "WALLET_PRIVATE_KEY_LOCAL", account.key.hex())
-
+                set_key(".env", "WALLET_PRIVATE_KEY", account.key.hex())
+                # Make sure token approvals are set
+                self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
+                self.state.cli.agent.perform_action(connection="sonic", action="_handle_token_approval", params=["0x29219dd400f2Bf60E5a23d13Be72B486D4038894", "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5", 1])  
+                
                 # Prepare the response with the public key
                 message = account.address
                 return {"status": "success", "message": message, "original_message": message}  
