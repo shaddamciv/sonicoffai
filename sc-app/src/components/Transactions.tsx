@@ -26,7 +26,7 @@ export const Transactions = (props: {
 
   const getTransactionRows = async () => {
     try {
-      const response = await fetch(`https://api.sonicscan.org/api?module=account&action=txlist&startblock=0&endblock=99999999&sort=desc&apikey=NJ5N7WS9PCW76MGY2INNDPDGUKSZ7SRA6A&address=${props.address}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SONIC_SCAN_BASE_URL}?module=account&action=txlist&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_SONIC_SCAN_API_KEY}&address=${props.address}`);
       if (response.ok) {
         const data = await response.json();
         if (data && data.result && Array.isArray(data.result))
