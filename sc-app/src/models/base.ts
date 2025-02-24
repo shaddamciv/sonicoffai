@@ -14,7 +14,7 @@ export interface Article {
 
 export interface Decision {
   symbol: string;
-  type: 'SELL' | 'BUY';
+  type: 'SELL' | 'BUY' | 'NEUTRAL';
   price: number;
   timestamp: string;
   rsi: number;

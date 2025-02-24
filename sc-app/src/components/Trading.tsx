@@ -142,7 +142,7 @@ export const Trading = () => {
             const price = signalJson.message.price[0];
             const deci = {
               symbol: result.split(';')[0],
-              type: result.split(';')[1] === 'LONG' ? 'BUY' : 'SELL',
+              type: result.split(';')[1] === 'LONG' ? 'BUY' : result.split(';')[1] === 'SHORT' ? 'SELL' : 'NEUTRAL',
               rsi: +result.split(';')[2].replace('rsi ', ''),
               price: +price.split(';')[1],
               timestamp: signalJson.message.timestamp
@@ -321,7 +321,7 @@ export const Trading = () => {
                 <td>{moment(decision?.timestamp).format('DD-MM-yyyy hh:mm:ss')}</td>
                 <td>{decision?.symbol}</td>
                 <td>{decision?.price}</td>
-                <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : 'text-success'}`}>{decision?.type}</td>
+                <td className={`font-semibold ${decision?.type === 'SELL' ? 'text-error' : decision?.type === 'BUY' ? 'text-success' : 'text-warning'}`}>{decision?.type}</td>
                 <td>{decision?.rsi}</td>
               </tr>
             </tbody>
