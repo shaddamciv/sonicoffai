@@ -18,7 +18,10 @@ export const Transactions = (props: {
   const [transactions, setTransactions] = useState<Array<Transaction>>([]);
 
   useEffect(() => {
-    getTransactionRows();
+    setInterval(() => {
+      getTransactionRows();
+    }
+    , 10000);
   }, []);
 
   const getTransactionRows = async () => {

@@ -353,7 +353,7 @@ export const Trading = () => {
               Go back
             </button>
           }
-          <Transactions address="0x35ce7fab34a5960ff273a2446952f48d99a0b3fe" />
+          <Transactions address={myAddress} />
         </div>
       }
     </div>
