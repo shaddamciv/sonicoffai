@@ -132,7 +132,7 @@ export const Trading = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            news: myContent ? myContent : `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
+            news: myContent ? contentCleaner(myContent) : `title: ${article?.title}; description: ${article?.description}; content: ${article?.content}`
           })
         });
         if (signal.ok) {
